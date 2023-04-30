@@ -1,27 +1,32 @@
 import openai
 import configparser
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+)  # pip install flask
+from flask_socketio import SocketIO  # pip install flask-socketio
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 openai.api_key = config["openai"]["api_key"]
 
 app = Flask(__name__, template_folder="templates")
+socketio = SocketIO(app)
 
 
-@app.route("/caht", methods=["GET"])
+@app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_input = request.form.get("user_input")
+@socketio.on("chat")
+def handle_chat(user_input):
     if not user_input:
         return jsonify({"error": "Missing 'message' field in form data"}), 400
     response = chat_with_gpt3(user_input)
-    response = response.replace("\n", "<br>")
-    return render_template("index.html", response=response)
+    socketio.emit("response", response)
 
 
 # text-davinci-002は、GPT-3の中でも最も高性能なモデルだが、応答速度が遅い
@@ -35,6 +40,7 @@ def chat_with_gpt3(prompt, model="text-davinci-002", tokens=2048):
         stop=None,
         temperature=0.5,
     )
+    print(response.choices[0].text)
     return response.choices[0].text
 
 
