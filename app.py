@@ -9,7 +9,7 @@ openai.api_key = config["openai"]["api_key"]
 app = Flask(__name__, template_folder="templates")
 
 
-@app.route("/", methods=["GET"])
+@app.route("/caht", methods=["GET"])
 def index():
     return render_template("index.html")
 
@@ -35,7 +35,6 @@ def chat_with_gpt3(prompt, model="text-davinci-002", tokens=2048):
         stop=None,
         temperature=0.5,
     )
-    print(response.choices[0].text)
     return response.choices[0].text
 
 
